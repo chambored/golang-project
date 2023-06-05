@@ -29,7 +29,7 @@ type Cell struct {
 	// type of display
 	displayType string
 	// size of display in inches
-	displaySize float32
+	displaySize float64
 	// resolution of display
 	displayResolution string
 	// any features that are sensors
@@ -41,7 +41,7 @@ type Cell struct {
 // NewCell creates a new Cell with the given properties.
 func NewCell(oem string, model string, launchAnnounced uint,
 	launchStatus string, bodyDimensions string, bodyWeight float32,
-	bodySim string, displayType string, displaySize float32,
+	bodySim string, displayType string, displaySize float64,
 	displayResolution string, featuresSensors string, platformOS string) *Cell {
 	return &Cell{
 		oem:               oem,
@@ -89,8 +89,8 @@ func averageWeight(cells map[string]*Cell) float32 {
 // averageDisplaySize calculates the average display size of the phones
 // in the given map. Only phones with a non-zero display size are considered
 // in the average.
-func averageDisplaySize(cells map[string]*Cell) float32 {
-	var totalSize float32
+func averageDisplaySize(cells map[string]*Cell) float64 {
+	var totalSize float64
 	var count int
 
 	for _, cell := range cells {
@@ -102,7 +102,7 @@ func averageDisplaySize(cells map[string]*Cell) float32 {
 	}
 
 	if count > 0 {
-		return totalSize / float32(count)
+		return totalSize / float64(count)
 	} else {
 		return 0
 	}
@@ -142,12 +142,14 @@ func countPhonesByYear(cells map[string]*Cell) YearCounts {
 }
 
 // countUniqueOS counts the number of unique operating systems
-// used in the given map of cells.
+// used in the given map of cells. nil operating systems are not counted.
 func countUniqueOS(cells map[string]*Cell) int {
 	osSet := make(map[string]struct{})
 
 	for _, cell := range cells {
-		osSet[cell.platformOS] = struct{}{}
+		if cell.platformOS != "" {
+			osSet[cell.platformOS] = struct{}{}
+		}
 	}
 
 	return len(osSet)
@@ -247,9 +249,11 @@ func findPhonesAnnouncedAndReleasedDifferentYears(cells map[string]*Cell) []Phon
 	var phoneDetails []PhoneDetails
 	for _, cell := range cells {
 		announcedYear := cell.launchAnnounced
-		releasedYear := cell.launchReleased
-		if announcedYear != releasedYear {
-			phoneDetails = append(phoneDetails, PhoneDetails{cell.oem, cell.model})
+		releasedYear := parseYear(cell.launchStatus)
+		if releasedYear != nil {
+			if announcedYear != *releasedYear {
+				phoneDetails = append(phoneDetails, PhoneDetails{cell.oem, cell.model})
+			}
 		}
 	}
 	return phoneDetails
@@ -344,7 +348,7 @@ func parseSim(simStr string) *string {
 // parseSize extracts a size in inches from a string. If no valid size is found or if
 // an error occurs during conversion, it returns nil. Otherwise, it returns a pointer to
 // the extracted size.
-func parseSize(sizeStr string) *float32 {
+func parseSize(sizeStr string) *float64 {
 	// Find any number followed by " inches" in the string
 	re := regexp.MustCompile("(\\d+(\\.\\d+)?)\\s* inches")
 	match := re.FindStringSubmatch(sizeStr)
@@ -362,7 +366,7 @@ func parseSize(sizeStr string) *float32 {
 	}
 
 	// Convert the size to a float32 and return a pointer to it
-	sizeFloat := float32(size)
+	sizeFloat := size
 	return &sizeFloat
 }
 
@@ -462,7 +466,7 @@ func main() {
 		// Parse the size from the ninth column of the line
 		sizePtr := parseSize(line[8])
 		// Create a variable to hold the size. This will default to 0.0 if parsing fails
-		var size float32 = 0.0
+		var size float64 = 0.0
 		// If parsing was successful, set size to the parsed size
 		if sizePtr != nil {
 			size = *sizePtr
@@ -517,10 +521,10 @@ func main() {
 	heaviest, lightest := findHeaviestAndLightestPhones(cells)
 	fmt.Printf("Heaviest Phone: %s\n", heaviest.oem+"'s "+heaviest.model+", "+fmt.Sprintf("%.2f", heaviest.bodyWeight)+" g")
 	fmt.Printf("Lightest Phone: %s\n", lightest.oem+"'s "+lightest.model+", "+fmt.Sprintf("%.2f", lightest.bodyWeight)+" g")
-	fmt.Println()
 
 	// Find the OEM with the highest average weight, and print the result
-    fmt.Println("The OEM with the highest average phone body weight is:", findOEMWithHighestAverageWeight(cells))
+	fmt.Println("The OEM with the highest average phone body weight is:", findOEMWithHighestAverageWeight(cells))
+	fmt.Println()
 
 	// Counting phones released each year and printing the result
 	fmt.Println("Number of cell announcements by year:")
@@ -541,14 +545,14 @@ func main() {
 	}
 
 	// Find the phones that were announced and released in different years
-    phones := findPhonesAnnouncedAndReleasedDifferentYears(cells)
-    // Print the result
-    if len(phones) > 0 {
-        fmt.Println("The following phones were announced and released in different years:")
-        for _, phone := range phones {
-            fmt.Printf("OEM: %s, Model: %s\n", phone.oem, phone.model)
-        }
-    } else {
-        fmt.Println("No phones were announced and released in different years.")
-    }
+	phones := findPhonesAnnouncedAndReleasedDifferentYears(cells)
+	// Print the result
+	if len(phones) > 0 {
+		fmt.Println("The following phones were announced and released in different years:")
+		for _, phone := range phones {
+			fmt.Printf("OEM: %s, Model: %s\n", phone.oem, phone.model)
+		}
+	} else {
+		fmt.Println("No phones were announced and released in different years.")
+	}
 }

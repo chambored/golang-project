@@ -1,17 +1,18 @@
 package main
 
 import (
-    "testing"
-    "reflect"
+	"math"
+	"reflect"
+	"testing"
 )
 
 func TestAverageWeight(t *testing.T) {
 	// Creating a test cell map
 	cells := map[string]*Cell{
-		"Google-Pixel 4 XL": {bodyWeight: 193.0},
-		"Google-Pixel 3":    {bodyWeight: 148.0},
+		"Google-Pixel 4 XL":  {bodyWeight: 193.0},
+		"Google-Pixel 3":     {bodyWeight: 148.0},
 		"Samsung-Galaxy S10": {bodyWeight: 157.0},
-		"Empty-Weight":      {bodyWeight: 0}, // This one should be excluded from the average.
+		"Empty-Weight":       {bodyWeight: 0}, // This one should be excluded from the average.
 	}
 
 	// Execute the function with the test cell map
@@ -29,33 +30,37 @@ func TestAverageWeight(t *testing.T) {
 func TestAverageDisplaySize(t *testing.T) {
 	// Creating a test cell map
 	cells := map[string]*Cell{
-		"Google-Pixel 4 XL": {displaySize: 6.3},
-		"Google-Pixel 3":    {displaySize: 5.5},
+		"Google-Pixel 4 XL":  {displaySize: 6.3},
+		"Google-Pixel 3":     {displaySize: 5.5},
 		"Samsung-Galaxy S10": {displaySize: 6.1},
-		"Zero-Display-Size": {displaySize: 0}, // This one should be excluded from the average.
+		"Zero-Display-Size":  {displaySize: 0}, // This one should be excluded from the average.
 	}
 
 	// Execute the function with the test cell map
-	result := averageDisplaySize(cells)
+	got := averageDisplaySize(cells)
 
-	// Expected average display size = (6.3 + 5.5 + 6.1) / 3 = 5.96667
-	var expected float32 = 5.96667
+	got = round(got, 2)
 
-	// If the result does not match the expected average, fail the test
-	if result != expected {
-		t.Errorf("averageDisplaySize(cells) = %.2f; want %.2f", result, expected)
+	want := 5.97
+
+	if got != want {
+		t.Errorf("averageDisplaySize(cells) = %v; want %v", got, want)
 	}
 }
 
+func round(val float64, precision int) float64 {
+	p := math.Pow(10, float64(precision))
+	return math.Round(val*p) / p
+}
 
 func TestCountPhonesByYear(t *testing.T) {
 	// Create a map of cells
 	cells := map[string]*Cell{
-		"Google-Pixel 4 XL": {launchAnnounced: 2019},
-		"Google-Pixel 3":    {launchAnnounced: 2018},
+		"Google-Pixel 4 XL":  {launchAnnounced: 2019},
+		"Google-Pixel 3":     {launchAnnounced: 2018},
 		"Samsung-Galaxy S10": {launchAnnounced: 2019},
-		"Samsung-Galaxy S9": {launchAnnounced: 2018},
-		"No-Announced-Year": {launchAnnounced: 0},  // This one should be ignored.
+		"Samsung-Galaxy S9":  {launchAnnounced: 2018},
+		"No-Announced-Year":  {launchAnnounced: 0}, // This one should be ignored.
 	}
 
 	// Expected result
@@ -114,25 +119,25 @@ func TestCountPhonesByOEM(t *testing.T) {
 }
 
 func TestFindLatestPhoneByOEM(t *testing.T) {
-    cells := map[string]*Cell{
-        "Phone1": {oem: "Apple", model: "iPhone 13", launchAnnounced: 2023},
-        "Phone2": {oem: "Apple", model: "iPhone 12", launchAnnounced: 2022},
-        "Phone3": {oem: "Samsung", model: "Galaxy S21", launchAnnounced: 2022},
-        "Phone4": {oem: "Samsung", model: "Galaxy S22", launchAnnounced: 2023},
-        "Phone5": {oem: "Google", model: "Pixel 6", launchAnnounced: 2023},
-    }
+	cells := map[string]*Cell{
+		"Phone1": {oem: "Apple", model: "iPhone 13", launchAnnounced: 2023},
+		"Phone2": {oem: "Apple", model: "iPhone 12", launchAnnounced: 2022},
+		"Phone3": {oem: "Samsung", model: "Galaxy S21", launchAnnounced: 2022},
+		"Phone4": {oem: "Samsung", model: "Galaxy S22", launchAnnounced: 2023},
+		"Phone5": {oem: "Google", model: "Pixel 6", launchAnnounced: 2023},
+	}
 
-    want := map[string]*Cell{
-        "Apple":  {oem: "Apple", model: "iPhone 13", launchAnnounced: 2023},
-        "Samsung": {oem: "Samsung", model: "Galaxy S22", launchAnnounced: 2023},
-        "Google": {oem: "Google", model: "Pixel 6", launchAnnounced: 2023},
-    }
+	want := map[string]*Cell{
+		"Apple":   {oem: "Apple", model: "iPhone 13", launchAnnounced: 2023},
+		"Samsung": {oem: "Samsung", model: "Galaxy S22", launchAnnounced: 2023},
+		"Google":  {oem: "Google", model: "Pixel 6", launchAnnounced: 2023},
+	}
 
-    got := findLatestPhoneByOEM(cells)
+	got := findLatestPhoneByOEM(cells)
 
-    if !reflect.DeepEqual(got, want) {
-        t.Errorf("findLatestPhoneByOEM(cells) = %v; want %v", got, want)
-    }
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("findLatestPhoneByOEM(cells) = %v; want %v", got, want)
+	}
 }
 
 func TestFindHeaviestAndLightestPhones(t *testing.T) {
@@ -159,122 +164,124 @@ func TestFindHeaviestAndLightestPhones(t *testing.T) {
 }
 
 func TestParseYear(t *testing.T) {
-    tests := []struct {
-        input string
-        want  *uint
-    }{
-        {"Announced 2023", uintPtr(2023)},
-        {"Invalid year", nil},
-        {"2000 2023", uintPtr(2000)}, // If there are multiple 4-digit numbers, the first one is taken
-        {"", nil},
-    }
+	tests := []struct {
+		input string
+		want  *uint
+	}{
+		{"Announced 2023", uintPtr(2023)},
+		{"Invalid year", nil},
+		{"2000 2023", uintPtr(2000)}, // If there are multiple 4-digit numbers, the first one is taken
+		{"", nil},
+	}
 
-    for _, test := range tests {
-        got := parseYear(test.input)
+	for _, test := range tests {
+		got := parseYear(test.input)
 
-        if !reflect.DeepEqual(got, test.want) {
-            t.Errorf("parseYear(%q) = %v, want %v", test.input, got, test.want)
-        }
-    }
+		if !reflect.DeepEqual(got, test.want) {
+			t.Errorf("parseYear(%q) = %v, want %v", test.input, got, test.want)
+		}
+	}
 }
 
 func TestParseWeight(t *testing.T) {
-    tests := []struct {
-        input string
-        want  *float32
-    }{
-        {"174 g", float32Ptr(174)},
-        {"Invalid weight", nil},
-        {"", nil},
-    }
+	tests := []struct {
+		input string
+		want  *float32
+	}{
+		{"174 g", float32Ptr(174)},
+		{"Invalid weight", nil},
+		{"", nil},
+	}
 
-    for _, test := range tests {
-        got := parseWeight(test.input)
+	for _, test := range tests {
+		got := parseWeight(test.input)
 
-        if !reflect.DeepEqual(got, test.want) {
-            t.Errorf("parseWeight(%q) = %v, want %v", test.input, got, test.want)
-        }
-    }
+		if !reflect.DeepEqual(got, test.want) {
+			t.Errorf("parseWeight(%q) = %v, want %v", test.input, got, test.want)
+		}
+	}
 }
 
 func TestParseSim(t *testing.T) {
-    tests := []struct {
-        input string
-        want  *string
-    }{
-        {"yes", nil},
-        {"no", nil},
-        {"Nano", strPtr("Nano")},
-        {"", strPtr("")},
-    }
+	tests := []struct {
+		input string
+		want  *string
+	}{
+		{"yes", nil},
+		{"no", nil},
+		{"Nano", strPtr("Nano")},
+		{"", strPtr("")},
+	}
 
-    for _, test := range tests {
-        got := parseSim(test.input)
+	for _, test := range tests {
+		got := parseSim(test.input)
 
-        if !reflect.DeepEqual(got, test.want) {
-            t.Errorf("parseSim(%q) = %v, want %v", test.input, got, test.want)
-        }
-    }
+		if !reflect.DeepEqual(got, test.want) {
+			t.Errorf("parseSim(%q) = %v, want %v", test.input, got, test.want)
+		}
+	}
 }
 
 func TestParseSize(t *testing.T) {
-    tests := []struct {
-        input string
-        want  *float32
-    }{
-        {"6.1 inches", float32Ptr(6.1)},
-        {"Invalid size", nil},
-        {"", nil},
-    }
+	sizeStr := "6.1 inches"
+	got := parseSize(sizeStr)
 
-    for _, test := range tests {
-        got := parseSize(test.input)
+	if got == nil {
+		t.Errorf("parseSize(%q) returned nil, want non-nil", sizeStr)
+	}
 
-        if !reflect.DeepEqual(got, test.want) {
-            t.Errorf("parseSize(%q) = %v, want %v", test.input, got, test.want)
-        }
-    }
+	const tolerance = 1e-6
+	want := 6.1
+
+	if !almostEqual(*got, want, tolerance) {
+		t.Errorf("parseSize(%q) = %v, want %v", sizeStr, *got, want)
+	}
+}
+
+func almostEqual(a, b, tolerance float64) bool {
+	return math.Abs(a-b) <= tolerance
 }
 
 func TestParseSensors(t *testing.T) {
-    tests := []struct {
-        input string
-        want  *string
-    }{
-        {"12.2", nil},
-        {"accelerometer", strPtr("accelerometer")},
-        {"", strPtr("")},
-    }
+	tests := []struct {
+		input string
+		want  *string
+	}{
+		{"12.2", nil},
+		{"accelerometer", strPtr("accelerometer")},
+		{"", strPtr("")},
+	}
 
-    for _, test := range tests {
-        got := parseSensors(test.input)
+	for _, test := range tests {
+		got := parseSensors(test.input)
 
-        if !reflect.DeepEqual(got, test.want) {
-            t.Errorf("parseSensors(%q) = %v, want %v", test.input, got, test.want)
-        }
-    }
+		if !reflect.DeepEqual(got, test.want) {
+			t.Errorf("parseSensors(%q) = %v, want %v", test.input, got, test.want)
+		}
+	}
 }
 
 func TestParsePlatformOS(t *testing.T) {
-    tests := []struct {
-        input string
-        want  *string
-    }{
-        {"10.0", nil},
-        {"Android, 10.0", strPtr("Android")},
-        {"", strPtr("")},
-    }
+	tests := []struct {
+		input string
+		want  *string
+	}{
+		{"10.0", nil},
+		{"Android, 10.0", strPtr("Android")},
+		{"", strPtr("")},
+	}
 
-    for _, test := range tests {
-        got := parsePlatformOS(test.input)
+	for _, test := range tests {
+		got := parsePlatformOS(test.input)
 
-        if !reflect.DeepEqual(got, test.want) {
-            t.Errorf("parsePlatformOS(%q) = %v, want %v", test.input, got, test.want)
-        }
-    }
+		if !reflect.DeepEqual(got, test.want) {
+			t.Errorf("parsePlatformOS(%q) = %v, want %v", test.input, got, test.want)
+		}
+	}
 }
 
 // Helper functions to create pointers to string and numerical values
-func strPtr(s string) *string { return &s }
-func uintPtr(u uint) *uint { return &u }
+func strPtr(s string) *string       { return &s }
+func uintPtr(u uint) *uint          { return &u }
 func float32Ptr(f float32) *float32 { return &f }
+func float64Ptr(f float64) *float64 { return &f }

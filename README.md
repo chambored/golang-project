@@ -1,6 +1,6 @@
 # Go Programming Language
 
-The programming language I picked for this project is Go, also known as Golang. The Go version used is Go 1.16.
+The programming language I picked for this project is Go, also known as Golang. The Go version used is Go 1.20.
 
 ## Why Go?
 
@@ -45,3 +45,8 @@ The underscore in Go is a blank identifier. You can use it when you don't care a
 A special note about Go loops - the "for {}" construct loops indefinitely, similar to a "while(true)" loop in other languages like Java.
 
 Overall, Go is a very powerful language that can handle complex tasks with simplicity and efficiency. It is highly suitable for concurrent operations and networked tasks, which make it an excellent choice for projects that need performance and scalability.
+
+## Some Sample Statistics from the console output:
+![Stats](resources/stats01.png)
+![Stats](resources/stats02.png)
+![Stats](resources/stats03.png)
